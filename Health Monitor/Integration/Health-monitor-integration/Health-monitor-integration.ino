@@ -1,7 +1,7 @@
 #include <SigFox.h>
 #include <ArduinoLowPower.h>
 #include <TinyGPS.h>
-#include <string.h>
+//#include <string.h>
 
 #define DEBUG true
 #define bpPin A5
@@ -18,13 +18,18 @@ bool ModuleState =false;
 unsigned long timeCount;
 float internalTemp,bodyTemperature;
 String internalTemperature;
-struct SigFoxMessage{
-  int8_t bodyTemp;
-  int8_t latitude;
-  int8_t longitude;
-  int8_t altitude;
-  int8_t speed;
-  int8_t bp;
+struct SigFoxTemp{
+  float bodyTemp;};
+  struct SigFoxLat{
+  float latitude;};
+  struct SigFoxLong{
+  float longitude;};
+  struct SigFoxAlt{
+  float altitude;};
+  struct SigFoxSpeed{
+  float speed;};
+  struct SigFoxBP{
+  float bp;
   };
 void setup() {
   Serial.begin(9600);
@@ -69,7 +74,7 @@ void setup() {
       Serial.println();
       delay(100);
       SigFox.end();
-      String mess = "Configuration message";
+      String mess = "Config text";
       mess.trim();
       if(mess.length()>12){
         Serial.println("Message too long only first 12 bytes will be sent...");
@@ -99,6 +104,8 @@ void sendConfigMessage(String msg){
   delay(1);
   SigFox.beginPacket();
   SigFox.print(msg);
+  SigFox.endPacket();
+  SigFox.end();
 }
 
 bool moduleStateCheck(){
@@ -195,16 +202,16 @@ void readBloodPressure(){
  bloodPressure = analogRead(bpPin);
  Serial.println("Blood pressure: "+bloodPressure);
 }
-void sendDataToSigFox(SigFoxMessage msg){
+void sendTempToSigFox(SigFoxTemp temp){
   if(debug){
     Serial.print("Sending: ");
-    Serial.print("Body temp: ");Serial.println(msg.bodyTemp);
-    Serial.print("latitude: ");Serial.println(msg.latitude);
-    Serial.print("longotude: ");Serial.println(msg.longitude);
-    Serial.print("altitude: ");Serial.println(msg.altitude);
-    Serial.print("speed: ");Serial.println(msg.speed);
-    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
-    if(sizeof(msg)>12){
+    Serial.print("Body temp: ");Serial.println(temp.bodyTemp);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(temp.bodyTemp)>12){
       Serial.println("Message too long only first 12 bytes will be sent");
       }
     }
@@ -212,14 +219,14 @@ void sendDataToSigFox(SigFoxMessage msg){
 //    msg.trim();
     SigFox.begin();
     delay(100);//after first configuration
-    SigFox.status();//clea all pending interrupts
+    SigFox.status();//clear all pending interrupts
     delay(1);
     if(debug) SigFox.debug();
     delay(100);
 
     //beginpacket
     SigFox.beginPacket();
-    SigFox.print(msg.bodyTemp);
+    SigFox.print(temp.bodyTemp);
 
     if(debug){
       int retPack = SigFox.endPacket(true);//send buffer and wait for response
@@ -248,23 +255,289 @@ void sendDataToSigFox(SigFoxMessage msg){
       }
     SigFox.end();
 }
-void sendTextMessage(SigFoxMessage message,String condition){
+void sendLatToSigFox(SigFoxLat lat){
+  if(debug){
+    Serial.print("Sending: ");
+    Serial.print("Body temp: ");Serial.println(lat.latitude);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(lat.latitude)>12){
+      Serial.println("Message too long only first 12 bytes will be sent");
+      }
+    }
+    //remove white spaces
+//    msg.trim();
+    SigFox.begin();
+    delay(100);//after first configuration
+    SigFox.status();//clear all pending interrupts
+    delay(1);
+    if(debug) SigFox.debug();
+    delay(100);
+
+    //beginpacket
+    SigFox.beginPacket();
+    SigFox.print(lat.latitude);
+
+    if(debug){
+      int retPack = SigFox.endPacket(true);//send buffer and wait for response
+      if(retPack>0){
+        Serial.println("No transmission");
+        }else{
+          Serial.println("Transmission ok");
+          }
+          Serial.println(SigFox.status(SIGFOX));
+          Serial.println(SigFox.status(ATMEL));
+
+          if(SigFox.parsePacket()){
+            Serial.println("Response from server: ");
+            while(SigFox.available()){
+              Serial.print("0x");
+              Serial.println(SigFox.read(),HEX);
+              }
+            }else{
+              Serial.println("Could not get any response from the server");
+              Serial.println("Check the SigFox coverage in your area");
+              Serial.println("If you are indoor, check the 20dB coverage or move near a window");
+            }
+            Serial.println();
+      }else{
+        SigFox.endPacket();
+      }
+    SigFox.end();
+}
+void sendLongToSigFox(SigFoxLong longi){
+  if(debug){
+    Serial.print("Sending: ");
+    Serial.print("Body temp: ");Serial.println(longi.longitude);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(longi.longitude)>12){
+      Serial.println("Message too long only first 12 bytes will be sent");
+      }
+    }
+    //remove white spaces
+//    msg.trim();
+    SigFox.begin();
+    delay(100);//after first configuration
+    SigFox.status();//clear all pending interrupts
+    delay(1);
+    if(debug) SigFox.debug();
+    delay(100);
+
+    //beginpacket
+    SigFox.beginPacket();
+    SigFox.print(longi.longitude);
+
+    if(debug){
+      int retPack = SigFox.endPacket(true);//send buffer and wait for response
+      if(retPack>0){
+        Serial.println("No transmission");
+        }else{
+          Serial.println("Transmission ok");
+          }
+          Serial.println(SigFox.status(SIGFOX));
+          Serial.println(SigFox.status(ATMEL));
+
+          if(SigFox.parsePacket()){
+            Serial.println("Response from server: ");
+            while(SigFox.available()){
+              Serial.print("0x");
+              Serial.println(SigFox.read(),HEX);
+              }
+            }else{
+              Serial.println("Could not get any response from the server");
+              Serial.println("Check the SigFox coverage in your area");
+              Serial.println("If you are indoor, check the 20dB coverage or move near a window");
+            }
+            Serial.println();
+      }else{
+        SigFox.endPacket();
+      }
+    SigFox.end();
+}
+void sendAltToSigFox(SigFoxAlt alt){
+  if(debug){
+    Serial.print("Sending: ");
+    Serial.print("Body temp: ");Serial.println(alt.altitude);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(alt)>12){
+      Serial.println("Message too long only first 12 bytes will be sent");
+      }
+    }
+    //remove white spaces
+//    msg.trim();
+    SigFox.begin();
+    delay(100);//after first configuration
+    SigFox.status();//clear all pending interrupts
+    delay(1);
+    if(debug) SigFox.debug();
+    delay(100);
+
+    //beginpacket
+    SigFox.beginPacket();
+    SigFox.print(alt.altitude);
+
+    if(debug){
+      int retPack = SigFox.endPacket(true);//send buffer and wait for response
+      if(retPack>0){
+        Serial.println("No transmission");
+        }else{
+          Serial.println("Transmission ok");
+          }
+          Serial.println(SigFox.status(SIGFOX));
+          Serial.println(SigFox.status(ATMEL));
+
+          if(SigFox.parsePacket()){
+            Serial.println("Response from server: ");
+            while(SigFox.available()){
+              Serial.print("0x");
+              Serial.println(SigFox.read(),HEX);
+              }
+            }else{
+              Serial.println("Could not get any response from the server");
+              Serial.println("Check the SigFox coverage in your area");
+              Serial.println("If you are indoor, check the 20dB coverage or move near a window");
+            }
+            Serial.println();
+      }else{
+        SigFox.endPacket();
+      }
+    SigFox.end();
+}
+void sendSpeedToSigFox(SigFoxSpeed mSpeed){
+  if(debug){
+    Serial.print("Sending: ");
+    Serial.print("Body temp: ");Serial.println(mSpeed.speed);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(mSpeed)>12){
+      Serial.println("Message too long only first 12 bytes will be sent");
+      }
+    }
+    //remove white spaces
+//    msg.trim();
+    SigFox.begin();
+    delay(100);//after first configuration
+    SigFox.status();//clear all pending interrupts
+    delay(1);
+    if(debug) SigFox.debug();
+    delay(100);
+
+    //beginpacket
+    SigFox.beginPacket();
+    SigFox.print(mSpeed.speed);
+
+    if(debug){
+      int retPack = SigFox.endPacket(true);//send buffer and wait for response
+      if(retPack>0){
+        Serial.println("No transmission");
+        }else{
+          Serial.println("Transmission ok");
+          }
+          Serial.println(SigFox.status(SIGFOX));
+          Serial.println(SigFox.status(ATMEL));
+
+          if(SigFox.parsePacket()){
+            Serial.println("Response from server: ");
+            while(SigFox.available()){
+              Serial.print("0x");
+              Serial.println(SigFox.read(),HEX);
+              }
+            }else{
+              Serial.println("Could not get any response from the server");
+              Serial.println("Check the SigFox coverage in your area");
+              Serial.println("If you are indoor, check the 20dB coverage or move near a window");
+            }
+            Serial.println();
+      }else{
+        SigFox.endPacket();
+      }
+    SigFox.end();
+}
+void sendBPToSigFox(SigFoxBP bp){
+  if(debug){
+    Serial.print("Sending: ");
+    Serial.print("Body temp: ");Serial.println(bp.bp);
+//    Serial.print("latitude: ");Serial.println(msg.latitude);
+//    Serial.print("longotude: ");Serial.println(msg.longitude);
+//    Serial.print("altitude: ");Serial.println(msg.altitude);
+//    Serial.print("speed: ");Serial.println(msg.speed);
+//    Serial.print("Blood Pressure: ");Serial.println(msg.bp);
+    if(sizeof(bp)>12){
+      Serial.println("Message too long only first 12 bytes will be sent");
+      }
+    }
+    //remove white spaces
+//    msg.trim();
+    SigFox.begin();
+    delay(100);//after first configuration
+    SigFox.status();//clear all pending interrupts
+    delay(1);
+    if(debug) SigFox.debug();
+    delay(100);
+
+    //beginpacket
+    SigFox.beginPacket();
+    SigFox.print(bp.bp);
+
+    if(debug){
+      int retPack = SigFox.endPacket(true);//send buffer and wait for response
+      if(retPack>0){
+        Serial.println("No transmission");
+        }else{
+          Serial.println("Transmission ok");
+          }
+          Serial.println(SigFox.status(SIGFOX));
+          Serial.println(SigFox.status(ATMEL));
+
+          if(SigFox.parsePacket()){
+            Serial.println("Response from server: ");
+            while(SigFox.available()){
+              Serial.print("0x");
+              Serial.println(SigFox.read(),HEX);
+              }
+            }else{
+              Serial.println("Could not get any response from the server");
+              Serial.println("Check the SigFox coverage in your area");
+              Serial.println("If you are indoor, check the 20dB coverage or move near a window");
+            }
+            Serial.println();
+      }else{
+        SigFox.endPacket();
+      }
+    SigFox.end();
+}
+void sendTextMessage(String condition,SigFoxTemp temp,SigFoxLat lati,SigFoxLong longi,SigFoxAlt alti,SigFoxSpeed mSpeed,SigFoxBP bp){
   bool isStillOn = moduleStateCheck();
   if(isStillOn){
     sendCommandToA9G("AT+CMGF=1",1000,DEBUG);
     sendCommandToA9G("AT+CGMS=\"0759459363\"",1000,DEBUG);
                       Serial1.println(condition);
-                      Serial1.print("Temperature: ");Serial1.println(message.bodyTemp);
-                      Serial1.print("Blood pressure: ");Serial1.println(message.bp);
-                      Serial1.print("Latitude: ");Serial1.println(message.latitude);
-                      Serial1.print("Longitude: ");Serial1.println(message.longitude);
-                      Serial1.print("Speed: ");Serial1.println(message.speed);
+                      Serial1.print("Temperature: ");Serial1.println(temp.bodyTemp);
+                      Serial1.print("Blood pressure: ");Serial1.println(bp.bp);
+                      Serial1.print("Latitude: ");Serial1.println(lati.latitude);
+                      Serial1.print("Longitude: ");Serial1.println(longi.longitude);
+                      Serial1.print("Speed: ");Serial1.println(mSpeed.speed);
+                      Serial1.print("Condition: ");Serial1.println(condition);
                       Serial1.print("https://www.google.com/maps/@");
-                      Serial1.print(message.latitude);Serial1.print(",");Serial.print(message.longitude);
-                      Serial1.write(26);
+                      Serial1.print(lati.latitude);Serial1.print(",");Serial.print(longi.longitude);
     
   }
 }
+
 void lightingNotification(int led){
   digitalWrite(led,HIGH);
 }
@@ -275,31 +548,42 @@ readInternalTemperature();
 readBodyTemp();
 readBloodPressure();
 readCoordinates();
-SigFoxMessage message;
-message.bodyTemp = bodyTemperature;
-message.latitude = lat;
-message.longitude = lon;
-message.altitude = alt;
-message.speed = speed;
-message.bp = bloodPressure;
-sendDataToSigFox(message);
-if(message.bodyTemp>30 && message.bodyTemp<35){
-  if(message.bp<100){
-    sendTextMessage(message,"Cold:Abn-cold");
+SigFoxTemp temp;
+SigFoxLat lati;
+SigFoxLong longi;
+SigFoxAlt alti;
+SigFoxSpeed mSpeed;
+SigFoxBP bp;
+temp.bodyTemp = bodyTemperature;
+lati.latitude = lat;
+longi.longitude = lon;
+alti.altitude = alt;
+mSpeed.speed = speed;
+bp.bp = bloodPressure;
+sendTempToSigFox(temp);
+sendLatToSigFox(lati);
+sendLongToSigFox(longi);
+sendAltToSigFox(alti);
+sendSpeedToSigFox(mSpeed);
+sendBPToSigFox(bp);
+
+if(temp.bodyTemp>30 && temp.bodyTemp<35){
+  if(bp.bp<100){
+    sendTextMessage("Cold:Abn-cold",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(blueLedPin);
   }else{
     digitalWrite(blueLedPin,LOW);
   }
-}else if(message.bodyTemp>35 && message.bodyTemp<38){
-  if(message.bp>120 && message.bp<160){
-    sendTextMessage(message,"Optimal:Fine-cond");
+}else if(temp.bodyTemp>35 && temp.bodyTemp<38){
+  if(bp.bp>120 && bp.bp<160){
+    sendTextMessage("Optimal:Fine-cond",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(greenLedPin);
   }else{
     digitalWrite(greenLedPin,LOW);
   }
-}else if(message.bodyTemp>39){
-  if(message.bp>160){
-    sendTextMessage(message,"Critical:Critical");
+}else if(temp.bodyTemp>39){
+  if(bp.bp>160){
+    sendTextMessage("Critical:Critical",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(redLedPin);
     digitalWrite(buzzerPin,HIGH);
   }else{
