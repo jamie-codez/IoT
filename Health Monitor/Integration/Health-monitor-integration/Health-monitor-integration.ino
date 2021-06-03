@@ -165,8 +165,8 @@ void Wait(int m,bool s){
 }
 
 void readCoordinates(){
+  sendCommandToA9G("AT+GPS=1",1000,DEBUG);
   if(millis()-timeCount>5000){
-    
     String nmeaData = sendCommandToA9G("AT+LOCATION=2",1000,DEBUG);
     char conv;
     for(int i=0;i<=nmeaData.length();i++){
@@ -195,7 +195,7 @@ void readInternalTemperature(){
 }
 void readBodyTemp(){
   bodyTemperature = analogRead(bodyTempPin);
-  bodyTemperature = (500 * bodyTemperature) /1024;
+  bodyTemperature = bodyTemperature/2.048;
   Serial.print("Body temperature: ");Serial.print(bodyTemperature);
 }
 void readBloodPressure(){
@@ -567,21 +567,21 @@ sendAltToSigFox(alti);
 sendSpeedToSigFox(mSpeed);
 sendBPToSigFox(bp);
 
-if(temp.bodyTemp>30 && temp.bodyTemp<35){
+if(temp.bodyTemp>80 && temp.bodyTemp<100){
   if(bp.bp<100){
     sendTextMessage("Cold:Abn-cold",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(blueLedPin);
   }else{
     digitalWrite(blueLedPin,LOW);
   }
-}else if(temp.bodyTemp>35 && temp.bodyTemp<38){
+}else if(temp.bodyTemp>100 && temp.bodyTemp<110){
   if(bp.bp>120 && bp.bp<160){
     sendTextMessage("Optimal:Fine-cond",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(greenLedPin);
   }else{
     digitalWrite(greenLedPin,LOW);
   }
-}else if(temp.bodyTemp>39){
+}else if(temp.bodyTemp>110){
   if(bp.bp>160){
     sendTextMessage("Critical:Critical",temp,lati,longi,alti,mSpeed,bp);
     lightingNotification(redLedPin);
